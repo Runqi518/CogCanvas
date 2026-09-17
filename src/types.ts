@@ -20,6 +20,8 @@ export interface CanvasNode {
   style?: {
     color?: string;
     fontSize?: number;
+    width?: number;
+    height?: number;
   };
   tags?: {
     feasibility?: Feasibility;

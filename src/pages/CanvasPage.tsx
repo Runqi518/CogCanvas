@@ -46,7 +46,7 @@ function CanvasInner() {
 
   const {
     project, loading, load, selectedNodeId, setSelected,
-    addNode, moveNode, removeNode, addEdge, removeEdge,
+    addNode, updateNode, moveNode, removeNode, addEdge, removeEdge,
     setMode, clusters, showClusters, recomputeClusters, applyCluster,
   } = useCanvasStore();
 
@@ -116,6 +116,10 @@ function CanvasInner() {
         inCluster: showClusters ? clusterColorMap.get(node.id) ?? null : null,
         onOpenPanel: openNodePanel,
       },
+      style: {
+        width: node.style?.width ?? 248,
+        height: node.style?.height,
+      },
       selected: node.id === selectedNodeId,
     }));
   }, [project, selectedNodeId, showClusters, clusterColorMap, openNodePanel]);
@@ -141,8 +145,18 @@ function CanvasInner() {
       if (change.type === 'position' && change.position) moveNode(change.id, change.position);
       else if (change.type === 'remove') removeNode(change.id);
       else if (change.type === 'select' && change.selected) setSelected(change.id);
+      else if (change.type === 'dimensions' && change.dimensions && !change.resizing) {
+        const node = project?.nodes.find((item) => item.id === change.id);
+        updateNode(change.id, {
+          style: {
+            ...node?.style,
+            width: Math.round(change.dimensions.width),
+            height: Math.round(change.dimensions.height),
+          },
+        });
+      }
     }
-  }, [moveNode, removeNode, setSelected]);
+  }, [moveNode, project, removeNode, setSelected, updateNode]);
 
   const onEdgesChange = useCallback((changes: EdgeChange[]) => {
     for (const change of changes) if (change.type === 'remove') removeEdge(change.id);

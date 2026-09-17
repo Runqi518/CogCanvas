@@ -57,6 +57,9 @@ button { color: inherit; outline: none; }
 
 .context-note {
   position: relative;
+  display: flex;
+  min-height: 142px;
+  flex-direction: column;
   overflow: hidden;
   border: 1px solid rgba(31, 31, 31, 0.05);
   border-radius: 22px;
@@ -98,7 +101,7 @@ button { color: inherit; outline: none; }
   box-shadow: 0 5px 12px rgba(31, 31, 31, 0.16);
 }
 .context-trigger:hover { background: #1f1f1f; }
-.context-note-body { padding: 10px 15px 13px; }
+.context-note-body { flex: 1; padding: 10px 15px 13px; }
 .context-note-textarea {
   width: 100%;
   resize: none;

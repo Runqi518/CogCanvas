@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Handle, Position, type NodeProps } from 'reactflow';
+import { Handle, NodeResizer, Position, type NodeProps } from 'reactflow';
 import type { CanvasNode } from '../types';
 import { useCanvasStore } from '../store/canvasStore';
 import { triggerMeta } from '../data/triggerBank';
@@ -44,12 +44,27 @@ function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
     <div
       className={`context-note ${selected ? 'context-note-selected' : ''}`}
       style={{
-        width: 248,
+        width: '100%',
+        height: node.style?.height ? '100%' : undefined,
         outline: inCluster ? `2px dashed ${inCluster}` : undefined,
         outlineOffset: 6,
       }}
     >
-      <Handle type="target" position={Position.Left} />
+      <NodeResizer
+        isVisible={selected}
+        minWidth={220}
+        minHeight={142}
+        keepAspectRatio
+        lineStyle={{ borderColor: 'transparent' }}
+        handleStyle={{
+          width: 9,
+          height: 9,
+          border: '1px solid rgba(31,31,31,.3)',
+          borderRadius: 3,
+          background: '#fff',
+        }}
+      />
+      <Handle type="target" position={Position.Left} style={{ opacity: 0, pointerEvents: 'none' }} />
       <div className="context-note-header">
         <span className="context-note-icon">
           {isTrigger ? <TriggerIcon type={node.triggerType!} size={16} /> : '📝'}
@@ -124,7 +139,7 @@ function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
           写作
         </button>
       </div>
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={Position.Right} style={{ opacity: 0, pointerEvents: 'none' }} />
     </div>
   );
 }
