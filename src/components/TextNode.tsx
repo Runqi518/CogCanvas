@@ -42,12 +42,15 @@ function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
 
   function openLongForm(event: React.MouseEvent) {
     event.stopPropagation();
+    if (value !== node.content) updateNode(id, { content: value });
+    setEditing(false);
     if (projectId) navigate(`/canvas/${projectId}/node/${id}/edit`);
   }
 
   return (
     <div
       className={`note-card ${selected ? 'note-card-selected' : ''}`}
+      onDoubleClick={openLongForm}
       style={{
         width: 164,
         backgroundColor: bgColor,
@@ -89,7 +92,6 @@ function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
           <div
             className="min-h-[44px] cursor-text whitespace-pre-wrap break-words text-[var(--ink)]"
             style={{ fontSize, lineHeight: 1.5 }}
-            onDoubleClick={openLongForm}
           >
             {node.content || <span className="text-gray-400">Double click...</span>}
             {node.longForm && <div className="mt-2 line-clamp-2 border-t border-black/10 pt-1.5 text-[10px] font-normal leading-relaxed text-gray-500">{node.longForm}</div>}
