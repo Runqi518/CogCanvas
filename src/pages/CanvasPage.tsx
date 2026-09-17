@@ -84,7 +84,7 @@ function CanvasInner() {
       labelStyle: { fontSize: 11, fill: '#1f1f1f', fontWeight: 'bold' },
       labelBgPadding: [6, 4] as [number, number],
       labelBgStyle: { fill: '#fff', fillOpacity: 1, stroke: '#1f1f1f', strokeWidth: 1.5, rx: 6, ry: 6 },
-      style: { stroke: NEON_EDGES[i % NEON_EDGES.length], strokeWidth: 4.5 },
+      style: { stroke: NEON_EDGES[i % NEON_EDGES.length], strokeWidth: 2.5 },
       animated: false,
     }));
   }, [project]);
@@ -109,7 +109,7 @@ function CanvasInner() {
     const target = event.target as HTMLElement;
     if (target.closest('.react-flow__node, .react-flow__edge, .react-flow__controls, .react-flow__panel, .k-card, .k-button, .rag-window')) return;
     const pos = rf.screenToFlowPosition({ x: event.clientX, y: event.clientY });
-    const node = addNode({ position: { x: pos.x - 110, y: pos.y - 40 } });
+    const node = addNode({ position: { x: pos.x - 82, y: pos.y - 36 } });
     setSelected(node.id);
   }, [rf, addNode, setSelected]);
 
@@ -124,7 +124,7 @@ function CanvasInner() {
     const rect = el?.getBoundingClientRect();
     const center = rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : { x: window.innerWidth / 2, y: window.innerHeight / 2 };
     const pos = rf.screenToFlowPosition(center);
-    const node = addNode({ position: { x: pos.x - 110, y: pos.y - 40 } });
+    const node = addNode({ position: { x: pos.x - 82, y: pos.y - 36 } });
     setSelected(node.id);
   }
 
@@ -137,10 +137,12 @@ function CanvasInner() {
       </div>
 
       <div className="absolute right-5 top-5 z-50 flex gap-2">
-        <button className="k-button" onClick={() => recomputeClusters()}>Cluster</button>
-        <button className={`k-button ${isConverge ? 'k-button-pink' : ''}`} onClick={() => setMode(isConverge ? 'diverge' : 'converge')}>
-          {isConverge ? 'Converge Mode' : 'Diverge Mode'}
-        </button>
+        {isConverge && <button className="k-button" onClick={() => recomputeClusters()}>Cluster ideas</button>}
+        <div className="flex items-center gap-1 rounded-lg border border-black/15 bg-white/80 p-1 shadow-sm" aria-label="Diverge and Converge are opposite creative modes">
+          <button className={`rounded-md px-3 py-1.5 text-[12px] font-bold ${!isConverge ? 'bg-[var(--neon-green)] shadow-sm' : 'text-gray-400'}`} onClick={() => setMode('diverge')}>Diverge</button>
+          <span className="text-[11px] text-gray-400">↔</span>
+          <button className={`rounded-md px-3 py-1.5 text-[12px] font-bold ${isConverge ? 'bg-[var(--neon-pink)] shadow-sm' : 'text-gray-400'}`} onClick={() => setMode('converge')}>Converge</button>
+        </div>
       </div>
 
       <div className="absolute left-5 bottom-5 z-50">
@@ -173,9 +175,9 @@ function CanvasInner() {
           <Controls showInteractive={false} className="!mb-6 !mr-6" />
         </ReactFlow>
 
-        {showClusters && clusters.length > 0 && (
+        {isConverge && showClusters && clusters.length > 0 && (
           <div className="k-card absolute bottom-20 left-5 z-50 w-[240px] px-3.5 py-3 bg-[var(--m-cream)]">
-            <div className="text-[13px] font-bold border-b-1.5 border-[var(--ink)] mb-2 pb-1">Clusters</div>
+            <div className="text-[13px] font-bold border-b-1.5 border-[var(--ink)] mb-2 pb-1">Converge suggestions</div>
             <div className="max-h-44 space-y-1.5 overflow-y-auto">
               {clusters.map((c, i) => (
                 <div key={i} className="flex items-center justify-between">

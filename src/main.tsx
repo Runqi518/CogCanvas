@@ -4,11 +4,13 @@ import { RouterProvider, createHashRouter } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import CanvasPage from './pages/CanvasPage';
 import WorkflowPage from './pages/WorkflowPage';
+import NodeEditorPage from './pages/NodeEditorPage';
 import './index.css';
 
 const router = createHashRouter([
   { path: '/', element: <HomePage /> },
   { path: '/canvas/:id', element: <CanvasPage /> },
+  { path: '/canvas/:projectId/node/:nodeId/edit', element: <NodeEditorPage /> },
   { path: '/workflow', element: <WorkflowPage /> },
 ]);
 

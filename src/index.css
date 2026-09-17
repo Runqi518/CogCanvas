@@ -49,6 +49,17 @@ button { color: inherit; outline: none; }
   box-shadow: 4px 4px 0 rgba(0,0,0,0.12);
 }
 
+/* 画布便签更接近真实纸片：轻边、低圆角、紧凑尺寸。 */
+.note-card {
+  position: relative;
+  border: 1px solid rgba(31, 31, 31, 0.55);
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(31, 31, 31, 0.12), 0 8px 18px rgba(31, 31, 31, 0.08);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.note-card:hover { box-shadow: 0 3px 7px rgba(31, 31, 31, 0.14), 0 10px 22px rgba(31, 31, 31, 0.1); }
+.note-card-selected { box-shadow: 0 0 0 2px rgba(31,31,31,.72), 0 6px 18px rgba(31,31,31,.13); }
+
 /* 核心组件：可按压小按钮 */
 .k-button {
   background: var(--m-grey);
@@ -80,12 +91,12 @@ button { color: inherit; outline: none; }
 
 /* React Flow Overrides */
 .react-flow__handle {
-  width: 16px !important;
-  height: 16px !important;
-  border: 1.5px solid var(--ink) !important;
+  width: 10px !important;
+  height: 10px !important;
+  border: 1px solid var(--ink) !important;
   background: #ffffff !important;
   border-radius: 50% !important;
-  box-shadow: 1px 1px 0 var(--ink);
+  box-shadow: 0 1px 2px rgba(31,31,31,.18);
 }
 .react-flow__edge-path {
   stroke-linecap: round;
@@ -95,6 +106,14 @@ button { color: inherit; outline: none; }
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 .react-flow__attribution { display: none; }
+
+.editor-surface {
+  background-color: #f7f7f8;
+  background-image:
+    radial-gradient(circle at 70% 0%, rgba(255,255,255,.95), transparent 48%),
+    linear-gradient(90deg, rgba(31,31,31,.025) 1px, transparent 1px);
+  background-size: auto, 28px 28px;
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }

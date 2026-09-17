@@ -26,6 +26,8 @@ const dataDir = process.env.DATA_DIR
   : join(root, 'server', 'data');
 const projectsFile = join(dataDir, 'projects.json');
 const ragFile = join(dataDir, 'rag.json');
+const memoriesFile = join(dataDir, 'memories.json');
+const materialsFile = join(dataDir, 'materials.json');
 const port = Number(process.env.PORT || 8787);
 const embeddingApiKey = process.env.EMBEDDING_API_KEY || process.env.OPENAI_API_KEY || '';
 const embeddingBaseUrl = (process.env.EMBEDDING_BASE_URL || 'https://api.openai.com/v1').replace(/\/$/, '');
@@ -122,12 +124,12 @@ async function reindexProject(project) {
     const previous = new Map(
       index.filter((chunk) => chunk.projectId === project.id).map((chunk) => [chunk.nodeId, chunk])
     );
-    const nodes = project.nodes.filter((node) => node.content?.trim());
+    const nodes = project.nodes.filter((node) => node.content?.trim() || node.longForm?.trim());
     const generatedEmbeddings = new Map();
     const pendingNodes = nodes.filter((node) => {
       const cached = previous.get(node.id);
       return !(
-        cached?.text === node.content.trim()
+        cached?.text === [node.content, node.longForm].filter(Boolean).join('\n\n').trim()
         && cached?.embeddingModel === embeddingModel
         && Array.isArray(cached.embedding)
       );
@@ -135,9 +137,9 @@ async function reindexProject(project) {
 
     if (embeddingApiKey && pendingNodes.length) {
       try {
-        const embeddings = await createEmbeddings(
-          pendingNodes.map((node) => node.content.trim())
-        );
+        const embeddings = await createEmbeddings(pendingNodes.map((node) =>
+          [node.content, node.longForm].filter(Boolean).join('\n\n').trim()
+        ));
         pendingNodes.forEach((node, index) => generatedEmbeddings.set(node.id, embeddings[index]));
       } catch (error) {
         console.error('Embedding indexing failed; using sparse fallback:', error.message);
@@ -145,7 +147,7 @@ async function reindexProject(project) {
     }
 
     const chunks = nodes.map((node) => {
-      const text = node.content.trim();
+      const text = [node.content, node.longForm].filter(Boolean).join('\n\n').trim();
       const cached = previous.get(node.id);
       const generatedEmbedding = generatedEmbeddings.get(node.id);
       return {
@@ -168,6 +170,33 @@ async function reindexProject(project) {
   });
 }
 
+async function reindexLibraryItem(item, kind) {
+  return withIndexLock(async () => {
+    const index = await readJson(ragFile, []);
+    const documentId = `${kind}:${item.id}`;
+    const text = [item.title, item.content].filter(Boolean).join('\n\n').trim();
+    let embedding = null;
+    if (embeddingApiKey && text) {
+      try { [embedding] = await createEmbeddings([text]); }
+      catch (error) { console.error(`${kind} indexing failed; using sparse fallback:`, error.message); }
+    }
+    const chunk = {
+      id: documentId,
+      projectId: null,
+      projectName: kind === 'material' ? 'Material Library' : 'Creative Memory',
+      nodeId: item.id,
+      kind,
+      text,
+      tags: item.tags || [],
+      sparseVector: sparseVectorize(text),
+      embedding,
+      embeddingModel: embedding ? embeddingModel : null,
+      updatedAt: item.updatedAt,
+    };
+    await writeJson(ragFile, [...index.filter((entry) => entry.id !== documentId), chunk]);
+  });
+}
+
 async function bodyOf(request) {
   const chunks = [];
   for await (const chunk of request) chunks.push(chunk);
@@ -186,7 +215,10 @@ function json(response, status, payload) {
 
 async function api(request, response, url) {
   if (request.method === 'OPTIONS') return json(response, 204, {});
+  if (request.method === 'GET' && url.pathname === '/api/health') return json(response, 200, { ok: true });
   const projectMatch = url.pathname.match(/^\/api\/projects\/([^/]+)$/);
+  const materialMatch = url.pathname.match(/^\/api\/materials\/([^/]+)$/);
+  const memoryMatch = url.pathname.match(/^\/api\/memories\/([^/]+)$/);
   const projects = await readJson(projectsFile, []);
 
   if (request.method === 'GET' && url.pathname === '/api/projects') return json(response, 200, projects);
@@ -209,6 +241,68 @@ async function api(request, response, url) {
     await writeJson(ragFile, index.filter((chunk) => chunk.projectId !== id));
     return json(response, 200, { ok: true });
   }
+  if (request.method === 'GET' && url.pathname === '/api/materials') {
+    const items = await readJson(materialsFile, []);
+    const query = (url.searchParams.get('q') || '').toLowerCase();
+    return json(response, 200, query
+      ? items.filter((item) => `${item.title} ${item.content} ${(item.tags || []).join(' ')}`.toLowerCase().includes(query))
+      : items);
+  }
+  if (request.method === 'PUT' && materialMatch) {
+    const body = await bodyOf(request);
+    const items = await readJson(materialsFile, []);
+    const itemId = decodeURIComponent(materialMatch[1]);
+    const previous = items.find((item) => item.id === itemId);
+    const item = {
+      id: itemId,
+      title: body.title || 'Untitled material',
+      type: body.type || 'text',
+      content: body.content || '',
+      sourceUrl: body.sourceUrl || '',
+      tags: Array.isArray(body.tags) ? body.tags : [],
+      createdAt: previous?.createdAt || Date.now(),
+      updatedAt: Date.now(),
+    };
+    await writeJson(materialsFile, [...items.filter((entry) => entry.id !== itemId), item]);
+    await reindexLibraryItem(item, 'material');
+    return json(response, 200, item);
+  }
+  if (request.method === 'DELETE' && materialMatch) {
+    const itemId = decodeURIComponent(materialMatch[1]);
+    const items = await readJson(materialsFile, []);
+    await writeJson(materialsFile, items.filter((item) => item.id !== itemId));
+    const index = await readJson(ragFile, []);
+    await writeJson(ragFile, index.filter((entry) => entry.id !== `material:${itemId}`));
+    return json(response, 200, { ok: true });
+  }
+  if (request.method === 'GET' && url.pathname === '/api/memories') {
+    return json(response, 200, await readJson(memoriesFile, []));
+  }
+  if (request.method === 'PUT' && memoryMatch) {
+    const body = await bodyOf(request);
+    const memories = await readJson(memoriesFile, []);
+    const memoryId = decodeURIComponent(memoryMatch[1]);
+    const previous = memories.find((item) => item.id === memoryId);
+    const memory = {
+      id: memoryId,
+      kind: body.kind || 'preference',
+      content: body.content || '',
+      metadata: body.metadata || {},
+      createdAt: previous?.createdAt || Date.now(),
+      updatedAt: Date.now(),
+    };
+    await writeJson(memoriesFile, [...memories.filter((item) => item.id !== memoryId), memory]);
+    await reindexLibraryItem({ ...memory, title: memory.kind, tags: [] }, 'memory');
+    return json(response, 200, memory);
+  }
+  if (request.method === 'DELETE' && memoryMatch) {
+    const memoryId = decodeURIComponent(memoryMatch[1]);
+    const memories = await readJson(memoriesFile, []);
+    await writeJson(memoriesFile, memories.filter((item) => item.id !== memoryId));
+    const index = await readJson(ragFile, []);
+    await writeJson(ragFile, index.filter((entry) => entry.id !== `memory:${memoryId}`));
+    return json(response, 200, { ok: true });
+  }
   if (request.method === 'POST' && url.pathname === '/api/rag/search') {
     const { query = '', projectId, limit = 6 } = await bodyOf(request);
     const index = await readJson(ragFile, []);
@@ -222,7 +316,7 @@ async function api(request, response, url) {
     }
     const querySparseVector = sparseVectorize(query);
     const results = index
-      .filter((chunk) => !projectId || chunk.projectId === projectId)
+      .filter((chunk) => !projectId || !chunk.projectId || chunk.projectId === projectId)
       .map(({ vector, sparseVector, embedding, ...chunk }) => {
         const canUseEmbedding = queryEmbedding
           && embedding

@@ -2,23 +2,30 @@ import { useState } from 'react';
 import type { CanvasNode, TriggerType } from '../types';
 import { useCanvasStore } from '../store/canvasStore';
 import { incubationDelayOptions, triggerMeta } from '../data/triggerBank';
+import { TriggerIcon } from './CognitiveIcon';
 
 const ORDER: TriggerType[] = ['bisociation', 'abstraction', 'perspective', 'scamper', 'incubation'];
 
 export default function TriggerPanel({ node }: { node: CanvasNode }) {
   const drawTrigger = useCanvasStore((s) => s.drawTrigger);
   const removeNode = useCanvasStore((s) => s.removeNode);
+  const project = useCanvasStore((s) => s.project);
+  const setSelected = useCanvasStore((s) => s.setSelected);
   const [expanded, setExpanded] = useState<TriggerType | null>(null);
+  const parentId = node.type === 'trigger'
+    ? project?.edges.find((edge) => edge.target === node.id)?.source
+    : undefined;
 
   return (
     <div className="k-card px-3.5 pb-3.5 pt-3 pointer-events-auto bg-[#ffffff]">
       <div className="mb-2 flex items-center justify-between border-b-1.5 border-[var(--ink)] pb-1.5">
         <div className="text-[14px] font-bold tracking-wide">Triggers</div>
-        <button className="text-[11px] underline font-bold" onClick={() => removeNode(node.id)}>Delete</button>
+        <div className="flex items-center gap-2">
+          {parentId && <button className="text-[11px] font-bold underline" onClick={() => setSelected(parentId)}>← Back</button>}
+          <button className="text-[11px] underline font-bold" onClick={() => removeNode(node.id)}>Delete</button>
+        </div>
       </div>
-      <p className="mb-3 text-[12px] bg-[var(--m-grey)] px-2 py-1.5 rounded-md border-[1.5px] border-[var(--ink)] shadow-[1px_1px_0_var(--ink)] line-clamp-2 font-bold">
-        {node.content || '(Empty)'}
-      </p>
+      {node.content.trim() && <p className="mb-3 line-clamp-2 rounded border border-black/20 bg-[var(--m-grey)] px-2 py-1.5 text-[12px] font-semibold">{node.content}</p>}
       <div className="space-y-2">
         {ORDER.map((t) => {
           const meta = triggerMeta[t];
@@ -33,8 +40,8 @@ export default function TriggerPanel({ node }: { node: CanvasNode }) {
                 }}
                 className="flex w-full items-center gap-2 px-2 py-2 text-left hover:bg-[var(--m-sand)] transition"
               >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] border-[var(--ink)] text-[10px] font-bold" style={{ background: meta.color }}>
-                  {meta.mark}
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-white" style={{ color: meta.color, borderColor: `${meta.color}66` }}>
+                  <TriggerIcon type={t} size={17} />
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[12px] font-bold">{meta.name}</span>

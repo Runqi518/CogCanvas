@@ -35,6 +35,7 @@ function migrate(project: CanvasProject): CanvasProject {
   if (p.schemaVersion == null) p.schemaVersion = SCHEMA_VERSION;
   if (!p.mode) p.mode = 'diverge';
   if (!Array.isArray(p.nodes)) p.nodes = [];
+  p.nodes = p.nodes.map((node) => ({ ...node, longForm: node.longForm ?? '' }));
   if (!Array.isArray(p.edges)) p.edges = [];
   return p;
 }

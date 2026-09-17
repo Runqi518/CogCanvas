@@ -5,7 +5,7 @@ export interface WorkflowStep {
   phase: 'diverge' | 'converge' | 'output';
   title: string;
   subtitle: string;
-  mark: string; // 印章式短代号，替代图标
+  mark: string; // 旧数据兼容；界面使用线性图标
   color: string; // 手帐系强调色（赭 / 苔 / 陶 / 红笔）
   description: string;
   principle: string; // 认知科学原理
@@ -42,22 +42,22 @@ export const WORKFLOW_STEPS: WorkflowStep[] = [
   {
     id: 'cluster',
     index: 3,
-    phase: 'diverge',
-    title: '语义聚类',
-    subtitle: 'Semantic Clustering',
+    phase: 'converge',
+    title: '收敛聚拢',
+    subtitle: 'Converge & Cluster',
     mark: '聚',
     color: '#5f6b40',
     description:
-      '系统分析所有节点的语义相似度，用淡色块暗示相近的想法群，一键聚拢，从混沌中发现隐藏模式。',
+      '从发散切换到收敛模式。系统分析节点的语义相似度并提出聚拢建议，帮助你从混沌中发现隐藏模式。',
     principle: '格式塔知觉组织 · TF-IDF 相似度',
-    actions: ['点击「整理」或新增 5 节点自动触发', '查看相近节点色块', '接受聚类建议，聚拢为一组'],
+    actions: ['切换到「Converge」', '点击「Cluster ideas」查看相近节点', '接受建议，把相近想法聚为一组'],
   },
   {
     id: 'converge',
     index: 4,
     phase: 'converge',
-    title: '收敛评估',
-    subtitle: 'Converge & Evaluate',
+    title: '评估筛选',
+    subtitle: 'Evaluate & Select',
     mark: '敛',
     color: '#8a4a3c',
     description:
@@ -80,7 +80,7 @@ export const WORKFLOW_STEPS: WorkflowStep[] = [
   },
 ];
 
-// 双钻石隐喻：发散（前 3 步）／收敛（后 2 步）
+// 双钻石隐喻：前两步发散，后三步收敛、评估与输出。
 export const WORKFLOW_OVERVIEW = {
   divergeLabel: '发散 · 打开',
   convergeLabel: '收敛 · 聚焦',

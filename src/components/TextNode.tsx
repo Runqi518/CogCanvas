@@ -1,8 +1,10 @@
 import { memo, useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Handle, Position, type NodeProps } from 'reactflow';
 import type { CanvasNode } from '../types';
 import { useCanvasStore } from '../store/canvasStore';
 import { triggerMeta } from '../data/triggerBank';
+import { TriggerIcon } from './CognitiveIcon';
 
 export interface TextNodeData {
   node: CanvasNode;
@@ -19,6 +21,8 @@ function tintOf(id: string) {
 function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
   const { node, inCluster } = data;
   const updateNode = useCanvasStore((s) => s.updateNode);
+  const projectId = useCanvasStore((s) => s.project?.id);
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(node.content === '');
   const [value, setValue] = useState(node.content);
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -36,25 +40,30 @@ function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
     if (value !== node.content) updateNode(id, { content: value });
   }
 
+  function openLongForm(event: React.MouseEvent) {
+    event.stopPropagation();
+    if (projectId) navigate(`/canvas/${projectId}/node/${id}/edit`);
+  }
+
   return (
     <div
-      className={`k-card ${selected ? '!ring-2 !ring-black !ring-offset-2' : ''}`}
+      className={`note-card ${selected ? 'note-card-selected' : ''}`}
       style={{
-        width: 220,
+        width: 164,
         backgroundColor: bgColor,
-        outline: inCluster ? `3px dashed ${inCluster}` : undefined,
-        outlineOffset: 6,
+        outline: inCluster ? `2px dashed ${inCluster}` : undefined,
+        outlineOffset: 4,
       }}
     >
       <Handle type="target" position={Position.Left} />
-      <div className="px-4 py-3.5">
+      <div className="px-3 py-2.5">
         {isTrigger && (
-          <div className="flex items-center gap-2 mb-2 border-b-1.5 border-[var(--ink)] pb-1.5">
+          <div className="mb-2 flex items-center gap-2 border-b border-black/15 pb-1.5">
             <span
-              className="flex h-5 w-5 items-center justify-center rounded-full border-[1.5px] border-[var(--ink)] text-[10px] font-bold shadow-[1px_1px_0_var(--ink)]"
-              style={{ background: meta.color }}
+              className="flex h-6 w-6 items-center justify-center rounded-md border bg-white/70"
+              style={{ color: meta.color, borderColor: `${meta.color}66` }}
             >
-              {meta.mark}
+              <TriggerIcon type={node.triggerType!} size={15} />
             </span>
             <span className="text-[13px] font-bold text-[var(--ink)] tracking-wide">
               {meta.name}
@@ -66,7 +75,7 @@ function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
             ref={ref}
             className="w-full resize-none bg-transparent outline-none text-[var(--ink)] nodrag"
             style={{ fontSize, lineHeight: 1.5 }}
-            rows={Math.max(2, value.split('\n').length)}
+            rows={Math.min(5, Math.max(2, value.split('\n').length))}
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onBlur={commit}
@@ -80,9 +89,10 @@ function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
           <div
             className="min-h-[44px] cursor-text whitespace-pre-wrap break-words text-[var(--ink)]"
             style={{ fontSize, lineHeight: 1.5 }}
-            onDoubleClick={() => setEditing(true)}
+            onDoubleClick={openLongForm}
           >
             {node.content || <span className="text-gray-400">Double click...</span>}
+            {node.longForm && <div className="mt-2 line-clamp-2 border-t border-black/10 pt-1.5 text-[10px] font-normal leading-relaxed text-gray-500">{node.longForm}</div>}
           </div>
         )}
         <NodeTags node={node} />

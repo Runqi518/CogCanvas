@@ -37,9 +37,9 @@ export default function RagSearch({ projectId, onSelect }: { projectId: string; 
       </form>
       <div className="max-h-48 overflow-y-auto space-y-1.5">
         {results.map((result) => (
-          <button key={result.id} onClick={() => onSelect(result.nodeId)} className="block w-full rounded border-[1.5px] border-[var(--ink)] bg-[var(--m-sand)] px-2.5 py-1.5 text-left text-[12px] shadow-[1px_1px_0_var(--ink)] hover:bg-[var(--neon-green)] transition">
+          <button key={result.id} onClick={() => result.projectId && onSelect(result.nodeId)} className="block w-full rounded border-[1.5px] border-[var(--ink)] bg-[var(--m-sand)] px-2.5 py-1.5 text-left text-[12px] shadow-[1px_1px_0_var(--ink)] hover:bg-[var(--neon-green)] transition">
             <span className="line-clamp-2 font-bold">{result.text}</span>
-            <small className="mt-1 block text-[10px] font-bold">MATCH {Math.round(result.score * 100)}%</small>
+            <small className="mt-1 block text-[10px] font-bold">{result.kind ? result.kind.toUpperCase() : `MATCH ${Math.round(result.score * 100)}%`}</small>
           </button>
         ))}
         {status && <p className="m-0 text-[11px] font-bold">{status}</p>}

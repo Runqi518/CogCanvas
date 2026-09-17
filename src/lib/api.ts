@@ -23,13 +23,43 @@ export const backend = {
     method: 'POST',
     body: JSON.stringify({ query, projectId }),
   }),
+  listMaterials: (query = '') => request<LibraryMaterial[]>(`/materials${query ? `?q=${encodeURIComponent(query)}` : ''}`),
+  saveMaterial: (material: LibraryMaterial) => request<LibraryMaterial>(`/materials/${encodeURIComponent(material.id)}`, {
+    method: 'PUT', body: JSON.stringify(material),
+  }),
+  removeMaterial: (id: string) => request<{ ok: boolean }>(`/materials/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  listMemories: () => request<UserMemory[]>('/memories'),
+  saveMemory: (memory: UserMemory) => request<UserMemory>(`/memories/${encodeURIComponent(memory.id)}`, {
+    method: 'PUT', body: JSON.stringify(memory),
+  }),
 };
+
+export interface LibraryMaterial {
+  id: string;
+  title: string;
+  type: 'text' | 'image' | 'link';
+  content: string;
+  sourceUrl?: string;
+  tags: string[];
+  createdAt?: number;
+  updatedAt?: number;
+}
+
+export interface UserMemory {
+  id: string;
+  kind: 'preference' | 'insight' | 'pattern';
+  content: string;
+  metadata?: Record<string, unknown>;
+  createdAt?: number;
+  updatedAt?: number;
+}
 
 export interface RagResult {
   id: string;
-  projectId: string;
+  projectId: string | null;
   projectName: string;
   nodeId: string;
+  kind?: 'material' | 'memory';
   text: string;
   score: number;
   retrievalMode?: 'embedding' | 'sparse';
