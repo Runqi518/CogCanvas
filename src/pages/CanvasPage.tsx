@@ -53,6 +53,7 @@ function CanvasInner() {
   const lastClusterCount = useRef(0);
   const linkedProjectRef = useRef<string | null>(null);
   const uploadInputRef = useRef<HTMLInputElement>(null);
+  const lastPaneClickRef = useRef<{ time: number; x: number; y: number } | null>(null);
   const [materialsOpen, setMaterialsOpen] = useState(true);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -174,6 +175,24 @@ function CanvasInner() {
     setSelected(node.id);
     setActivePanel(null);
   }, [rf, addNode, addEdge, project, selectedNodeId, setSelected]);
+
+  const onPaneClick = useCallback((event: React.MouseEvent) => {
+    const click = { time: Date.now(), x: event.clientX, y: event.clientY };
+    const previous = lastPaneClickRef.current;
+    const isDoubleClick = previous
+      && click.time - previous.time <= 500
+      && Math.hypot(click.x - previous.x, click.y - previous.y) <= 16;
+
+    if (isDoubleClick) {
+      lastPaneClickRef.current = null;
+      onPaneDoubleClick(event);
+      return;
+    }
+
+    lastPaneClickRef.current = click;
+    setSelected(null);
+    setActivePanel(null);
+  }, [onPaneDoubleClick, setSelected]);
 
   async function uploadMaterial(file: File) {
     setUploading(true);
@@ -337,14 +356,7 @@ function CanvasInner() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onPaneClick={(event) => {
-            if (event.detail >= 2) {
-              onPaneDoubleClick(event);
-              return;
-            }
-            setSelected(null);
-            setActivePanel(null);
-          }}
+          onPaneClick={onPaneClick}
           fitView
           minZoom={0.2}
           maxZoom={2}
