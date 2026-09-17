@@ -331,7 +331,7 @@ function CanvasInner() {
         />
       </div>
 
-      <div className="relative flex flex-1 overflow-hidden" onDoubleClick={onPaneDoubleClick}>
+      <div className="relative flex flex-1 overflow-hidden" onDoubleClickCapture={onPaneDoubleClick}>
         <ReactFlow
           nodes={rfNodes}
           edges={rfEdges}
