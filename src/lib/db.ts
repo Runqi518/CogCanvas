@@ -1,6 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import { SCHEMA_VERSION, type CanvasProject } from '../types';
-import { backend } from './api';
+import { cloud } from './api';
 
 interface CogCanvasDB extends DBSchema {
   projects: {
@@ -42,43 +42,52 @@ function migrate(project: CanvasProject): CanvasProject {
 
 export async function listProjects(): Promise<CanvasProject[]> {
   const db = await getDB();
-  const all = await db.getAll('projects');
+  const local = (await db.getAll('projects')).map(migrate);
   try {
-    const remote = await backend.list();
-    const merged = new Map(all.map((project) => [project.id, project]));
+    const remote = (await cloud.listProjects()).map(migrate);
+    const merged = new Map(local.map((project) => [project.id, project]));
     for (const project of remote) {
-      const local = merged.get(project.id);
-      if (!local || project.updatedAt > local.updatedAt) {
-        merged.set(project.id, project);
-        await db.put('projects', project);
-      }
+      const current = merged.get(project.id);
+      if (!current || project.updatedAt > current.updatedAt) merged.set(project.id, project);
     }
-    return [...merged.values()].map(migrate).sort((a, b) => b.updatedAt - a.updatedAt);
+    await Promise.all([...merged.values()].map((project) => db.put('projects', project)));
+    return [...merged.values()].sort((a, b) => b.updatedAt - a.updatedAt);
   } catch {
-    return all.map(migrate).sort((a, b) => b.updatedAt - a.updatedAt);
+    return local.sort((a, b) => b.updatedAt - a.updatedAt);
   }
 }
 
 export async function getProject(id: string): Promise<CanvasProject | undefined> {
   const db = await getDB();
-  const p = await db.get('projects', id);
+  const local = await db.get('projects', id);
   try {
-    const remote = await backend.get(id);
-    if (!p || remote.updatedAt > p.updatedAt) await db.put('projects', remote);
-    return migrate(!p || remote.updatedAt > p.updatedAt ? remote : p);
+    const remote = migrate(await cloud.getProject(id));
+    if (!local || remote.updatedAt > local.updatedAt) {
+      await db.put('projects', remote);
+      return remote;
+    }
   } catch {
-    return p ? migrate(p) : undefined;
+    // Offline-first: IndexedDB remains the source when the API is unavailable.
   }
+  return local ? migrate(local) : undefined;
 }
 
 export async function saveProject(project: CanvasProject): Promise<void> {
   const db = await getDB();
   await db.put('projects', project);
-  backend.save(project).catch(() => undefined);
+  try {
+    await cloud.saveProject(project);
+  } catch {
+    // Local save has succeeded; the next write/list refresh retries cloud sync.
+  }
 }
 
 export async function deleteProject(id: string): Promise<void> {
   const db = await getDB();
   await db.delete('projects', id);
-  backend.remove(id).catch(() => undefined);
+  try {
+    await cloud.deleteProject(id);
+  } catch {
+    // Keep deletion responsive while offline.
+  }
 }

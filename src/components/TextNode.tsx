@@ -9,13 +9,7 @@ import { TriggerIcon } from './CognitiveIcon';
 export interface TextNodeData {
   node: CanvasNode;
   inCluster?: string | null;
-}
-
-const MAILLARD_TINTS = ['#f9f6f0', '#e6dfd1', '#d4c4b7', '#e8e8e8'];
-function tintOf(id: string) {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 17 + id.charCodeAt(i)) % 997;
-  return MAILLARD_TINTS[h % MAILLARD_TINTS.length];
+  onOpenPanel?: (nodeId: string, panel: 'trigger' | 'memory' | 'reference') => void;
 }
 
 function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
@@ -32,7 +26,6 @@ function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
 
   const meta = node.triggerType ? triggerMeta[node.triggerType] : null;
   const isTrigger = node.type === 'trigger' && meta;
-  const bgColor = isTrigger ? '#ffffff' : tintOf(id);
   const fontSize = node.style?.fontSize ?? 15;
 
   function commit() {
@@ -49,36 +42,38 @@ function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
 
   return (
     <div
-      className={`note-card ${selected ? 'note-card-selected' : ''}`}
-      onDoubleClick={openLongForm}
+      className={`context-note ${selected ? 'context-note-selected' : ''}`}
       style={{
-        width: 164,
-        backgroundColor: bgColor,
+        width: 248,
         outline: inCluster ? `2px dashed ${inCluster}` : undefined,
-        outlineOffset: 4,
+        outlineOffset: 6,
       }}
     >
       <Handle type="target" position={Position.Left} />
-      <div className="px-3 py-2.5">
-        {isTrigger && (
-          <div className="mb-2 flex items-center gap-2 border-b border-black/15 pb-1.5">
-            <span
-              className="flex h-6 w-6 items-center justify-center rounded-md border bg-white/70"
-              style={{ color: meta.color, borderColor: `${meta.color}66` }}
-            >
-              <TriggerIcon type={node.triggerType!} size={15} />
-            </span>
-            <span className="text-[13px] font-bold text-[var(--ink)] tracking-wide">
-              {meta.name}
-            </span>
-          </div>
-        )}
+      <div className="context-note-header">
+        <span className="context-note-icon">
+          {isTrigger ? <TriggerIcon type={node.triggerType!} size={16} /> : '📝'}
+        </span>
+        <span className="context-note-title">{isTrigger ? meta.name : 'Idea Node'}</span>
+        <button
+          type="button"
+          className="context-trigger nodrag"
+          onClick={(event) => {
+            event.stopPropagation();
+            data.onOpenPanel?.(id, 'trigger');
+          }}
+        >
+          Trigger ✧
+        </button>
+      </div>
+
+      <div className="context-note-body">
         {editing ? (
           <textarea
             ref={ref}
-            className="w-full resize-none bg-transparent outline-none text-[var(--ink)] nodrag"
-            style={{ fontSize, lineHeight: 1.5 }}
-            rows={Math.min(5, Math.max(2, value.split('\n').length))}
+            className="context-note-textarea nodrag"
+            style={{ fontSize, lineHeight: 1.55 }}
+            rows={Math.min(6, Math.max(3, value.split('\n').length))}
             value={value}
             onChange={(e) => setValue(e.target.value)}
             onBlur={commit}
@@ -86,18 +81,48 @@ function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
               if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) commit();
               if (e.key === 'Escape') { setValue(node.content); setEditing(false); }
             }}
-            placeholder="Type here..."
+            placeholder="Write down your thoughts here..."
           />
         ) : (
           <div
-            className="min-h-[44px] cursor-text whitespace-pre-wrap break-words text-[var(--ink)]"
-            style={{ fontSize, lineHeight: 1.5 }}
+            className="min-h-[58px] cursor-text whitespace-pre-wrap break-words text-[#666]"
+            style={{ fontSize, lineHeight: 1.55 }}
+            onDoubleClick={openLongForm}
           >
-            {node.content || <span className="text-gray-400">Double click...</span>}
-            {node.longForm && <div className="mt-2 line-clamp-2 border-t border-black/10 pt-1.5 text-[10px] font-normal leading-relaxed text-gray-500">{node.longForm}</div>}
+            {node.content || <span className="text-gray-400">Write down your thoughts here...</span>}
+            {node.longForm && <div className="mt-3 line-clamp-2 border-t border-black/5 pt-2 text-[11px] font-normal leading-relaxed text-gray-500">{node.longForm}</div>}
           </div>
         )}
         <NodeTags node={node} />
+      </div>
+
+      <div className="context-note-actions">
+        <button
+          type="button"
+          className="context-action nodrag"
+          onClick={(event) => {
+            event.stopPropagation();
+            data.onOpenPanel?.(id, 'memory');
+          }}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10.01 10.01 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8.01 8.01 0 0 1-8 8Zm1-13h-2v6l5.2 3.1 1-1.7-4.2-2.5Z" /></svg>
+          记忆
+        </button>
+        <button
+          type="button"
+          className="context-action nodrag"
+          onClick={(event) => {
+            event.stopPropagation();
+            data.onOpenPanel?.(id, 'reference');
+          }}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h14V5Zm2 5h2v7H7Zm4-3h2v10h-2Zm4 6h2v4h-2Z" /></svg>
+          参考
+        </button>
+        <button type="button" className="context-action nodrag" onClick={openLongForm}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75Zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75Z" /></svg>
+          写作
+        </button>
       </div>
       <Handle type="source" position={Position.Right} />
     </div>

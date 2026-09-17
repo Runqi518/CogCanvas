@@ -39,33 +39,6 @@ export default {
         pencil: '#a8443a',
         stampred: '#9c4038',
         clip: '#9b9b95',
-        // 档案柜（sepia）扩展：米色 / 奶油白 / 牛皮棕 / 墨黑
-        cream: {
-          DEFAULT: '#fbf6e8',
-          50: '#fffdf5',
-          100: '#f9f3e3',
-          200: '#f0e7d1',
-          300: '#e6dcc4',
-        },
-        beige: {
-          DEFAULT: '#e9dcb8',
-          light: '#f3e7c6',
-          deep: '#d9c79c',
-        },
-        hide: {
-          // 牛皮纸棕（leather / kraft brown）
-          DEFAULT: '#a8926b',
-          light: '#b49f78',
-          deep: '#8e7952',
-          dark: '#6b5936',
-        },
-        sepia: {
-          ink: '#4a3f2c',
-          shade: 'rgba(120, 92, 46, 0.55)',
-        },
-        moss: '#5f6b40',
-        clay: '#8a4a3c',
-        ochre: '#8f6a33',
       },
       fontFamily: {
         song: [
@@ -92,12 +65,6 @@ export default {
         sticky:
           '0 1px 1px rgba(51,45,34,0.14), 0 4px 8px rgba(51,45,34,0.16), 0 10px 16px rgba(51,45,34,0.10)',
         inset: 'inset 0 0 40px rgba(120,104,76,0.12)',
-        archive:
-          '0 2px 3px rgba(50,38,18,0.18), 0 10px 20px rgba(50,38,18,0.20), 0 26px 46px rgba(50,38,18,0.20)',
-        card: '0 1px 2px rgba(50,38,18,0.18), 0 6px 14px rgba(50,38,18,0.18)',
-      },
-      fontSize: {
-        meta: ['9.5px', { lineHeight: '1.5' }],
       },
     },
   },
