@@ -167,8 +167,6 @@ function CanvasInner() {
   }, [addEdge]);
 
   const onPaneDoubleClick = useCallback((event: React.MouseEvent) => {
-    const target = event.target as HTMLElement;
-    if (target.closest('.react-flow__node, .react-flow__edge, .react-flow__controls, .react-flow__panel, .k-card, .k-button, .rag-window')) return;
     const position = rf.screenToFlowPosition({ x: event.clientX, y: event.clientY });
     const sourceId = selectedNodeId ?? project?.nodes[project.nodes.length - 1]?.id;
     const node = addNode({ position: { x: position.x - 124, y: position.y - 60 } });
@@ -331,7 +329,7 @@ function CanvasInner() {
         />
       </div>
 
-      <div className="relative flex flex-1 overflow-hidden" onDoubleClickCapture={onPaneDoubleClick}>
+      <div className="relative flex flex-1 overflow-hidden">
         <ReactFlow
           nodes={rfNodes}
           edges={rfEdges}
@@ -339,7 +337,11 @@ function CanvasInner() {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
-          onPaneClick={() => {
+          onPaneClick={(event) => {
+            if (event.detail >= 2) {
+              onPaneDoubleClick(event);
+              return;
+            }
             setSelected(null);
             setActivePanel(null);
           }}
