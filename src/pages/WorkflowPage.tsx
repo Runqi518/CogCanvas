@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { WORKFLOW_STEPS, WORKFLOW_OVERVIEW } from '../data/workflowSteps';
 import { triggerMeta } from '../data/triggerBank';
 import { Paperclip, Stamp, HandDrawnRule } from '../components/Journal';
+import { TriggerIcon, WorkflowIcon } from '../components/CognitiveIcon';
 
 export default function WorkflowPage() {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ export default function WorkflowPage() {
   }
 
   return (
-    <div className="kraft-surface min-h-full">
+    <div className="desk-surface sepia-wash min-h-full">
       <div className="mx-auto max-w-4xl px-6 pb-20 pt-7">
         {/* ===== 顶部条 ===== */}
         <header className="mb-7 flex flex-wrap items-end justify-between gap-3">
@@ -68,22 +69,16 @@ export default function WorkflowPage() {
           <HandDrawnRule className="my-4 max-w-[220px]" />
           <p className="max-w-lg text-[13px] leading-loose text-ink-soft">
             {WORKFLOW_OVERVIEW.corePromise}。与传统白板只提供记录空间不同，CogCanvas
-            用五步认知工作流主动介入你的思考过程。
+            用五步认知工作流主动介入你的思考过程。先在 Diverge 模式打开可能性，再进入
+            Converge 模式聚拢、评估并输出；语义聚类是收敛工具，而不是第三种模式。
           </p>
 
-          {/* 双钻石示意 */}
-          <div className="mt-8 flex items-end gap-8">
-            <DiamondPhase
-              color="#6f6249"
-              label={WORKFLOW_OVERVIEW.divergeLabel}
-              steps="01 – 03"
-            />
-            <DiamondPhase
-              color="#a8443a"
-              label={WORKFLOW_OVERVIEW.convergeLabel}
-              steps="04 – 05"
-            />
+          <div className="mt-6 flex max-w-md items-center gap-3 text-[11px] font-semibold tracking-[.12em]">
+            <span className="rounded-md bg-[#52e085] px-3 py-1.5">DIVERGE · 发散</span>
+            <span className="text-ink-faint">↔</span>
+            <span className="rounded-md bg-[#ff6bba] px-3 py-1.5">CONVERGE · 收敛</span>
           </div>
+
         </section>
 
         {/* ===== 五个阶段 ===== */}
@@ -106,7 +101,7 @@ export default function WorkflowPage() {
                   className="flex h-11 w-11 items-center justify-center rounded-sm text-[19px] leading-none text-paper-light"
                   style={{ background: s.color }}
                 >
-                  {s.mark}
+                  <WorkflowIcon step={s.id} size={23} />
                 </div>
                 <div className="meta-line mt-2 text-[9.5px]">
                   {String(i + 1).padStart(2, '0')}
@@ -185,7 +180,7 @@ export default function WorkflowPage() {
                       className="flex h-[21px] w-[21px] items-center justify-center rounded-sm text-[12px] leading-none text-paper-light"
                       style={{ background: m.color }}
                     >
-                      {m.mark}
+                      <TriggerIcon type={key as keyof typeof triggerMeta} size={15} />
                     </span>
                     <span
                       className="text-[13px] tracking-[0.08em]"
@@ -225,34 +220,6 @@ export default function WorkflowPage() {
   );
 }
 
-/** 双钻石阶段示意（菱形用 CSS clip-path） */
-function DiamondPhase({
-  color,
-  label,
-  steps,
-}: {
-  color: string;
-  label: string;
-  steps: string;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-2">
-      <div
-        className="h-11 w-32"
-        style={{
-          background: `${color}22`,
-          border: `1.5px dashed ${color}`,
-          clipPath: 'polygon(50% 0, 100% 50%, 50% 100%, 0 50%)',
-        }}
-      />
-      <div className="text-[12px] tracking-[0.12em]" style={{ color }}>
-        {label}
-      </div>
-      <div className="meta-line text-[9px]">STEP {steps}</div>
-    </div>
-  );
-}
-
 function MiniMock({ step }: { step: string }) {
   const frame =
     'relative overflow-hidden border border-[rgba(120,104,76,0.3)] bg-[rgba(233,224,205,0.5)] p-3';
@@ -283,10 +250,10 @@ function MiniMock({ step }: { step: string }) {
           核心想法
         </span>
         <span className="text-[12px] text-ink-faint">→</span>
-        {[
-          { t: '和蜂巢有什么关系', c: '#8f6a33', m: '联' },
-          { t: '换成5岁小孩视角', c: '#8a4a3c', m: '视' },
-        ].map(({ t, c, m }) => (
+          {[
+            { t: '和蜂巢有什么关系', c: '#8f6a33', type: 'bisociation' as const },
+            { t: '换成5岁小孩视角', c: '#8a4a3c', type: 'perspective' as const },
+          ].map(({ t, c, type }) => (
           <span
             key={t}
             className="flex items-center gap-1.5 border bg-[rgba(250,246,236,0.85)] px-2 py-1.5 text-[10.5px] text-ink"
@@ -296,7 +263,7 @@ function MiniMock({ step }: { step: string }) {
               className="flex h-[15px] w-[15px] items-center justify-center rounded-sm text-[9px] leading-none text-paper-light"
               style={{ background: c }}
             >
-              {m}
+              <TriggerIcon type={type} size={11} />
             </span>
             {t}
           </span>

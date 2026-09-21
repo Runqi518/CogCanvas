@@ -1,5 +1,5 @@
 // 数据结构（对齐 PRD 第 4 节）。SCHEMA_VERSION 用于未来数据迁移。
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export type TriggerType =
   | 'bisociation'
@@ -15,10 +15,18 @@ export interface CanvasNode {
   type: 'normal' | 'trigger';
   triggerType?: TriggerType;
   content: string;
+  longForm?: string;
   position: { x: number; y: number };
   style?: {
     color?: string;
     fontSize?: number;
+    width?: number;
+    height?: number;
+  };
+  material?: {
+    id: string;
+    type: string;
+    sourceUrl?: string;
   };
   tags?: {
     feasibility?: Feasibility;

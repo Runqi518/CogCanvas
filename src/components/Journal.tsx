@@ -139,6 +139,221 @@ export function ArchiveLabel({
   );
 }
 
+/* =========================================================
+   档案柜扩展元件：贴纸 / 票根 / 老照片 / 档案卡壳 / 图钉 / 咖啡渍
+   ========================================================= */
+
+/** 封箱贴纸：如 "HANDLE WITH CURIOSITY" */
+export function PackingSticker({
+  text,
+  className = '',
+  rotate = -1.5,
+  style,
+}: {
+  text: string;
+  className?: string;
+  rotate?: number;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div
+      className={`packing-sticker typewriter px-3.5 py-1 text-[9.5px] uppercase ${className}`}
+      style={{ transform: `rotate(${rotate}deg)`, ...style }}
+    >
+      {text}
+    </div>
+  );
+}
+
+/** 图钉 */
+export function Pin({
+  className = '',
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return <span className={`pin ${className}`} style={style} aria-hidden="true" />;
+}
+
+/** 咖啡渍水痕 */
+export function CoffeeRing({
+  size = 92,
+  className = '',
+  style,
+}: {
+  size?: number;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <span
+      className={`coffee-ring ${className}`}
+      style={{ width: size, height: size, ...style }}
+      aria-hidden="true"
+    />
+  );
+}
+
+/** 折痕线 */
+export function Crease({
+  className = '',
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return <span className={`crease ${className}`} style={style} aria-hidden="true" />;
+}
+
+/** 打字机式档案编号行 */
+export function ArchiveMeta({
+  items,
+  className = '',
+}: {
+  items: [string, string][];
+  className?: string;
+}) {
+  return (
+    <dl className={`typewriter grid gap-x-5 gap-y-1 text-[9.5px] ${className}`}>
+      {items.map(([k, v]) => (
+        <div key={k} className="flex items-baseline gap-2">
+          <dt className="shrink-0 uppercase text-ink-pale">{k}</dt>
+          <dd className="flex-1 border-b border-dotted border-[rgba(79,69,52,0.35)] pb-[1px] uppercase text-ink-soft">
+            {v}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/**
+ * 档案卡片外壳：统一提供做旧边缘、纸张厚度、轻微倾斜、抬起交互
+ * variant 决定纸张纹理（地图 / 草图 / 漫画 / 扫描 / 票据 / 牛皮）
+ */
+export type ArchiveCardVariant =
+  | 'cream'
+  | 'kraft'
+  | 'map'
+  | 'grid'
+  | 'comic'
+  | 'scan'
+  | 'ticket';
+
+const VARIANT_CLASS: Record<ArchiveCardVariant, string> = {
+  cream: 'paper-cream',
+  kraft: 'paper-kraft',
+  map: 'map-paper',
+  grid: 'grid-paper',
+  comic: 'comic-paper',
+  scan: 'scan-paper',
+  ticket: 'ticket',
+};
+
+export function ArchiveCard({
+  variant = 'cream',
+  rotate = 0,
+  className = '',
+  style,
+  children,
+  as: Tag = 'div',
+  onClick,
+}: {
+  variant?: ArchiveCardVariant;
+  rotate?: number;
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+  as?: 'div' | 'section' | 'article';
+  onClick?: () => void;
+}) {
+  return (
+    <Tag
+      onClick={onClick}
+      className={`${VARIANT_CLASS[variant]} aged-edge lift relative ${className}`}
+      style={{ transform: `rotate(${rotate}deg)`, ...style }}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+/** 票根：左侧存根 + 右侧主体，中间虚线撕口 */
+export function TicketStub({
+  serial,
+  title,
+  note,
+  rotate = -1,
+  className = '',
+  onClick,
+}: {
+  serial: string;
+  title: string;
+  note?: string;
+  rotate?: number;
+  className?: string;
+  onClick?: () => void;
+}) {
+  return (
+    <div
+      onClick={onClick}
+      className={`ticket aged-edge lift relative flex items-stretch ${className}`}
+      style={{ transform: `rotate(${rotate}deg)` }}
+    >
+      <div className="flex w-[54px] shrink-0 flex-col items-center justify-center gap-1 px-1 py-3">
+        <span className="typewriter text-[8px] uppercase text-ink-pale">no.</span>
+        <span className="typewriter text-[11px] text-clay">{serial}</span>
+      </div>
+      <div className="ticket-perf flex-1 px-3.5 py-3">
+        <div className="text-[13px] tracking-[0.08em] text-ink">{title}</div>
+        {note && (
+          <div className="meta-line mt-1 text-[9.5px] uppercase">{note}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** 老照片：白边相纸 + 手写图注 */
+export function PhotoCard({
+  caption,
+  date,
+  rotate = 2,
+  className = '',
+  height = 96,
+  children,
+}: {
+  caption: string;
+  date?: string;
+  rotate?: number;
+  className?: string;
+  height?: number;
+  children?: React.ReactNode;
+}) {
+  return (
+    <figure
+      className={`photo-frame lift relative ${className}`}
+      style={{ transform: `rotate(${rotate}deg)` }}
+    >
+      <div
+        className="photo-image flex items-center justify-center overflow-hidden"
+        style={{ height }}
+      >
+        {children}
+      </div>
+      <figcaption className="absolute bottom-1.5 left-0 right-0 px-2 text-center">
+        <span className="handwriting text-[12px]">{caption}</span>
+        {date && (
+          <span className="typewriter ml-1.5 text-[8px] uppercase text-ink-pale">
+            {date}
+          </span>
+        )}
+      </figcaption>
+    </figure>
+  );
+}
+
 /** 手绘风格分隔线 */
 export function HandDrawnRule({ className = '' }: { className?: string }) {
   return (

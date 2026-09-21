@@ -2,344 +2,199 @@
 @tailwind components;
 @tailwind utilities;
 
-html,
-body,
-#root {
-  height: 100%;
-  margin: 0;
+:root {
+  --ink: #1f1f1f;
+  --bg-white: #ffffff;
+  --m-cream: #f9f6f0;
+  --m-sand: #e6dfd1;
+  --m-latte: #d4c4b7;
+  --m-mocha: #9c7b64;
+  --m-grey: #e8e8e8;
+  --neon-green: #52e085;
+  --neon-cyan: #59d2f6;
+  --neon-pink: #ff6bba;
 }
 
+html, body, #root { height: 100%; margin: 0; }
 body {
-  font-family: 'Songti SC', 'SimSun', 'STSong', 'Noto Serif SC',
-    'Source Han Serif SC', serif;
-  color: #2f2b25;
-  background-color: #c9b899;
+  color: var(--ink);
+  background: var(--bg-white);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+}
+button, input, textarea, select { font: inherit; }
+button { color: inherit; outline: none; }
+::selection { background: var(--neon-green); color: var(--ink); }
+
+.kinopio-bg {
+  background-color: var(--bg-white);
+  background-image: url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20 Q 25 28, 30 20' stroke='%23e0e0e0' fill='none' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M80 80 Q 85 88, 90 80' stroke='%23e0e0e0' fill='none' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M30 90 Q 25 95, 20 90' stroke='%23e0e0e0' fill='none' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M90 30 Q 95 35, 100 30' stroke='%23e0e0e0' fill='none' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-size: 120px 120px;
 }
 
-::selection {
-  background: rgba(168, 68, 58, 0.22);
+.k-card {
+  background: var(--m-cream);
+  border: 1.5px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.k-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.12);
 }
 
-/* ============ 牛皮纸底板 ============ */
-.kraft-surface {
+.note-card {
   position: relative;
-  background-color: #b09a72;
-  background-image:
-    /* 细颗粒噪点 */
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.62'/%3E%3C/svg%3E"),
-    /* 纸纤维横纹 */
-      repeating-linear-gradient(
-        94deg,
-        rgba(255, 250, 235, 0.05) 0px,
-        rgba(255, 250, 235, 0.05) 1px,
-        transparent 1px,
-        transparent 4px
-      ),
-    /* 纸纤维竖纹 */
-      repeating-linear-gradient(
-        2deg,
-        rgba(74, 58, 32, 0.055) 0px,
-        rgba(74, 58, 32, 0.055) 1px,
-        transparent 1px,
-        transparent 5px
-      ),
-    /* 大面积色泽不均 */
-      radial-gradient(
-        120% 80% at 15% 8%,
-        rgba(214, 195, 158, 0.6) 0%,
-        transparent 58%
-      ),
-    radial-gradient(
-      100% 90% at 88% 96%,
-      rgba(96, 76, 46, 0.4) 0%,
-      transparent 62%
-    );
-  background-blend-mode: soft-light, normal, normal, normal, normal;
-}
-
-/* 四周压暗，像摊开的纸板 */
-.kraft-surface::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    115% 95% at 50% 42%,
-    transparent 48%,
-    rgba(64, 50, 30, 0.3) 100%
-  );
-}
-
-/* ============ 纸卡 ============ */
-.paper {
-  position: relative;
-  background-color: #f9f5ea;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23p)' opacity='0.22'/%3E%3C/svg%3E"),
-    radial-gradient(
-      100% 100% at 18% 0%,
-      rgba(255, 255, 252, 0.95) 0%,
-      transparent 62%
-    ),
-    linear-gradient(160deg, #fdfbf4 0%, #f7f2e6 52%, #efe8d7 100%);
-  background-blend-mode: soft-light, normal, normal;
-  box-shadow: 0 1px 2px rgba(45, 36, 20, 0.16),
-    0 5px 12px rgba(45, 36, 20, 0.2), 0 18px 34px rgba(45, 36, 20, 0.18);
-}
-
-/* 做旧的深色纸（文件夹/档案袋） */
-.paper-kraft {
-  position: relative;
-  background-color: #dccfae;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='k'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23k)' opacity='0.4'/%3E%3C/svg%3E"),
-    linear-gradient(165deg, #e8dcbe 0%, #dbcdab 55%, #cdbc96 100%);
-  background-blend-mode: soft-light, normal;
-  box-shadow: 0 1px 2px rgba(45, 36, 20, 0.18),
-    0 6px 14px rgba(45, 36, 20, 0.2);
-}
-
-/* 纸张边缘的细微毛边 */
-.paper-edge {
-  box-shadow: 0 0 0 1px rgba(108, 90, 58, 0.26),
-    0 1px 2px rgba(45, 36, 20, 0.16), 0 5px 12px rgba(45, 36, 20, 0.2),
-    0 18px 34px rgba(45, 36, 20, 0.18);
-}
-
-/* ============ 便签（Sticky Note）============ */
-.sticky-note {
-  position: relative;
-  background-color: #f4e59b;
-  background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23s)' opacity='0.22'/%3E%3C/svg%3E"),
-    linear-gradient(168deg, #f8eeb4 0%, #f4e59b 55%, #ebd984 100%);
-  background-blend-mode: soft-light, normal;
-  box-shadow: 0 1px 1px rgba(51, 45, 34, 0.14),
-    0 4px 8px rgba(51, 45, 34, 0.16), 0 10px 16px rgba(51, 45, 34, 0.1);
-}
-
-/* 便签右下角翻起的折角 */
-.sticky-note::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 18px;
-  height: 18px;
-  background: linear-gradient(
-    135deg,
-    transparent 0%,
-    transparent 48%,
-    rgba(163, 145, 88, 0.45) 50%,
-    rgba(198, 180, 120, 0.9) 52%,
-    #f1e6a9 100%
-  );
-  box-shadow: -1px -1px 2px rgba(51, 45, 34, 0.12);
-}
-
-/* ============ 胶带 ============ */
-.tape {
-  position: absolute;
-  width: 78px;
-  height: 22px;
-  background: linear-gradient(
-    100deg,
-    rgba(238, 228, 200, 0.55) 0%,
-    rgba(228, 215, 182, 0.78) 45%,
-    rgba(240, 231, 205, 0.55) 100%
-  );
-  border-left: 1px solid rgba(255, 255, 255, 0.4);
-  border-right: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 1px 3px rgba(51, 45, 34, 0.16);
-  backdrop-filter: saturate(0.8) brightness(1.02);
-}
-.tape::before,
-.tape::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: repeating-linear-gradient(
-    -45deg,
-    rgba(255, 255, 255, 0.28) 0 2px,
-    transparent 2px 4px
-  );
-}
-.tape::before {
-  left: 0;
-}
-.tape::after {
-  right: 0;
-}
-
-/* ============ 橡皮图章 ============ */
-.stamp {
-  color: #9c4038;
-  border: 2px solid rgba(156, 64, 56, 0.55);
-  border-radius: 9999px;
-  letter-spacing: 0.12em;
-  transform: rotate(-8deg);
-  opacity: 0.82;
-  mix-blend-mode: multiply;
-}
-
-/* ============ 档案标签页（文件夹 tab）============ */
-.folder-tab {
-  background-color: #d9c9a9;
-  background-image: linear-gradient(180deg, #e2d4b6 0%, #d3c1a0 100%);
-  border: 1px solid rgba(120, 104, 76, 0.32);
-  border-bottom: none;
-  box-shadow: 0 -1px 2px rgba(51, 45, 34, 0.08) inset,
-    0 -2px 6px rgba(51, 45, 34, 0.1);
-}
-.folder-tab-active {
-  background-image: linear-gradient(180deg, #f6f1e5 0%, #eee6d5 100%);
-  border-color: rgba(120, 104, 76, 0.42);
-}
-
-/* ============ 排版细节 ============ */
-/* 档案式小标题：字距拉开 + 下划实线 */
-.label-title {
-  letter-spacing: 0.14em;
-  border-bottom: 1px solid rgba(79, 69, 52, 0.5);
-  padding-bottom: 2px;
-}
-/* 元信息小字（斜杠分隔） */
-.meta-line {
-  letter-spacing: 0.1em;
-  color: #867b69;
-}
-/* 红笔手写批注 */
-.pencil-note {
-  color: #a8443a;
-  font-style: italic;
-}
-/* 手写下划波浪线 */
-.underline-wave {
-  text-decoration: underline;
-  text-decoration-style: wavy;
-  text-decoration-color: rgba(168, 68, 58, 0.45);
-  text-underline-offset: 4px;
-}
-/* 直接压在牛皮板上的文字：反白 + 轻微投影，保证可读性 */
-.on-kraft {
-  color: #faf4e6;
-  text-shadow: 0 1px 2px rgba(40, 31, 16, 0.55);
-}
-.on-kraft.label-title,
-.on-kraft .label-title {
-  border-bottom-color: rgba(250, 244, 230, 0.6);
-}
-.meta-on-kraft {
-  letter-spacing: 0.1em;
-  color: rgba(250, 244, 230, 0.75);
-  text-shadow: 0 1px 2px rgba(40, 31, 16, 0.5);
-}
-.note-on-kraft {
-  color: #f6ded4;
-  font-style: italic;
-  text-shadow: 0 1px 2px rgba(40, 31, 16, 0.5);
-}
-
-/* 纸面细横线（信纸） */
-.ruled {
-  background-image: repeating-linear-gradient(
-    180deg,
-    transparent 0px,
-    transparent 25px,
-    rgba(120, 104, 76, 0.16) 25px,
-    rgba(120, 104, 76, 0.16) 26px
-  );
-}
-/* 打孔（孔眼） */
-.punch-holes::before {
-  content: '';
-  position: absolute;
-  left: 10px;
-  top: 0;
-  bottom: 0;
-  width: 12px;
-  background-image: radial-gradient(
-    circle 5px at 6px 6px,
-    rgba(74, 60, 38, 0.38) 0 5px,
-    transparent 5px
-  );
-  background-size: 12px 46px;
-  background-repeat: repeat-y;
-  opacity: 0.5;
-}
-
-/* ============ react-flow 手帐化 ============ */
-.rf-node-textarea {
-  resize: none;
-  outline: none;
-  background: transparent;
-  width: 100%;
-  font-family: inherit;
-  color: #2f2b25;
-}
-.rf-node-textarea::placeholder {
-  color: rgba(111, 98, 73, 0.55);
-}
-
-.react-flow__controls {
+  border: 1px solid rgba(31, 31, 31, 0.55);
   border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid rgba(120, 104, 76, 0.4);
-  box-shadow: 0 2px 8px rgba(51, 45, 34, 0.2);
+  box-shadow: 0 2px 5px rgba(31, 31, 31, 0.12), 0 8px 18px rgba(31, 31, 31, 0.08);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
-.react-flow__controls-button {
-  background: #f4eee1;
-  border-bottom: 1px solid rgba(120, 104, 76, 0.24);
-  fill: #544c40;
+.note-card:hover { box-shadow: 0 3px 7px rgba(31, 31, 31, 0.14), 0 10px 22px rgba(31, 31, 31, 0.1); }
+.note-card-selected { box-shadow: 0 0 0 2px rgba(31,31,31,.72), 0 6px 18px rgba(31,31,31,.13); }
+
+.context-note {
+  position: relative;
+  display: flex;
+  min-height: 160px;
+  flex-direction: column;
+  overflow: visible;
+  border: 1px solid rgba(31, 31, 31, 0.05);
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(31, 31, 31, 0.09), 0 3px 10px rgba(31, 31, 31, 0.04);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
-.react-flow__controls-button:hover {
-  background: #eae0cd;
+.context-note:hover { box-shadow: 0 18px 40px rgba(31, 31, 31, 0.12), 0 5px 12px rgba(31, 31, 31, 0.05); }
+.context-note-selected { box-shadow: 0 0 0 2px var(--neon-pink), 0 18px 40px rgba(31, 31, 31, 0.12); }
+.context-note-header { display: flex; align-items: center; gap: 8px; padding: 12px 13px 6px; }
+.context-note-icon {
+  display: flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 9px;
+  background: #fdf3e4;
+  color: #555;
 }
-.react-flow__minimap {
-  border: 1px solid rgba(120, 104, 76, 0.4);
-  border-radius: 3px;
-  box-shadow: 0 2px 8px rgba(51, 45, 34, 0.2);
+.context-note-title {
+  border-radius: 2px;
+  background: #b9d9ff;
+  padding: 1px 3px;
+  color: #555;
+  font-size: 13px;
+  font-weight: 700;
 }
-/* 连线：像铅笔画的细线 */
-.react-flow__edge-path {
-  stroke-linecap: round;
+.context-trigger {
+  margin-left: auto;
+  border: 0;
+  border-radius: 999px;
+  background: #333;
+  padding: 6px 10px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 5px 12px rgba(31, 31, 31, 0.16);
 }
-.react-flow__edge.selected .react-flow__edge-path {
-  stroke: #a8443a !important;
+.context-trigger:hover { background: #1f1f1f; }
+.context-expand {
+  margin-left: auto;
+  border: 0;
+  border-radius: 7px;
+  background: #f3f4f6;
+  padding: 4px 7px;
+  color: #555;
+  font-size: 14px;
+  font-weight: 700;
 }
-.react-flow__edge-textbg {
-  fill: #f4eee1 !important;
+.context-expand:hover { background: var(--neon-cyan); }
+.context-expand + .context-trigger { margin-left: 0; }
+.context-note-body { flex: 1; padding: 10px 15px 13px; }
+.context-note-textarea {
+  width: 100%;
+  resize: none;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #666;
 }
-.react-flow__edge-text {
-  font-family: 'Songti SC', 'SimSun', serif !important;
-  letter-spacing: 0.08em;
+.context-note-actions {
+  display: flex;
+  gap: 6px;
+  border-top: 1px solid rgba(31, 31, 31, 0.04);
+  padding: 8px 12px 10px;
 }
+.context-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(31, 31, 31, 0.06);
+  border-radius: 999px;
+  background: #f3f4f6;
+  padding: 5px 9px;
+  color: #666;
+  font-size: 11px;
+  font-weight: 700;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.context-action:hover { background: #e9eaed; transform: translateY(-1px); }
+.context-action svg { width: 14px; height: 14px; fill: currentColor; }
+
+.k-button {
+  background: var(--m-grey);
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: transform 0.1s, box-shadow 0.1s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+.k-button:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.k-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--ink);
+}
+.k-button-green { background: var(--neon-green); }
+.k-button-cyan { background: var(--neon-cyan); }
+.k-button-pink { background: var(--neon-pink); }
+.k-button-yellow { background: #f4d44d; }
+
 .react-flow__handle {
-  border-radius: 9999px;
+  width: 10px !important;
+  height: 10px !important;
+  border: 1px solid var(--ink) !important;
+  background: #ffffff !important;
+  border-radius: 50% !important;
+  box-shadow: 0 1px 2px rgba(31,31,31,.18);
 }
-.react-flow__attribution {
-  display: none;
+.react-flow__edge-path { stroke-linecap: round; }
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke-width: 6px !important;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+.react-flow__attribution { display: none; }
+
+.editor-surface {
+  background-color: #f7f7f8;
+  background-image:
+    radial-gradient(circle at 70% 0%, rgba(255,255,255,.95), transparent 48%),
+    linear-gradient(90deg, rgba(31,31,31,.025) 1px, transparent 1px);
+  background-size: auto, 28px 28px;
 }
 
-/* ============ 滚动条 ============ */
-::-webkit-scrollbar {
-  width: 11px;
-  height: 11px;
-}
-::-webkit-scrollbar-thumb {
-  background: #a5946f;
-  border-radius: 2px;
-  border: 3px solid transparent;
-  background-clip: content-box;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #8f7f63;
-  background-clip: content-box;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { border: 2px solid var(--bg-white); border-radius: 5px; background: #c0c0c0; }
+::-webkit-scrollbar-track { background: var(--bg-white); }

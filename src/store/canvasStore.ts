@@ -107,6 +107,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       id: uid('node'),
       type: 'normal',
       content: '',
+      longForm: '',
       position: { x: 0, y: 0 },
       createdAt: t,
       updatedAt: t,

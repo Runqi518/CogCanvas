@@ -1,243 +1,175 @@
 import { memo, useEffect, useRef, useState } from 'react';
-import { Handle, Position, type NodeProps } from 'reactflow';
+import { useNavigate } from 'react-router-dom';
+import { Handle, NodeResizer, Position, type NodeProps } from 'reactflow';
 import type { CanvasNode } from '../types';
 import { useCanvasStore } from '../store/canvasStore';
 import { triggerMeta } from '../data/triggerBank';
+import { TriggerIcon } from './CognitiveIcon';
 
 export interface TextNodeData {
   node: CanvasNode;
-  inCluster?: string | null; // 聚类簇颜色
-}
-
-/** 由 id 派生一个稳定的小角度，让每张便签都像手贴上去的 */
-function tiltOf(id: string) {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 1000;
-  return ((h % 40) - 20) / 10; // -2.0deg ~ +1.9deg
-}
-
-/** 便签配色（普通节点在几种纸色中轮换） */
-const STICKY_TINTS = [
-  'linear-gradient(168deg,#f8eeb4 0%,#f4e59b 55%,#ebd984 100%)',
-  'linear-gradient(168deg,#f7ecb9 0%,#f1e29a 55%,#e8d582 100%)',
-  'linear-gradient(168deg,#f9f0c2 0%,#f5e8a6 55%,#ecdc8c 100%)',
-];
-function tintOf(id: string) {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 17 + id.charCodeAt(i)) % 997;
-  return STICKY_TINTS[h % STICKY_TINTS.length];
+  inCluster?: string | null;
+  onOpenPanel?: (nodeId: string, panel: 'trigger' | 'memory' | 'reference') => void;
+  onExpandMaterial?: (nodeId: string) => void;
 }
 
 function TextNodeInner({ id, data, selected }: NodeProps<TextNodeData>) {
   const { node, inCluster } = data;
   const updateNode = useCanvasStore((s) => s.updateNode);
+  const projectId = useCanvasStore((s) => s.project?.id);
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(node.content === '');
   const [value, setValue] = useState(node.content);
   const ref = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    setValue(node.content);
-  }, [node.content]);
-
-  useEffect(() => {
-    if (editing) ref.current?.focus();
-  }, [editing]);
+  useEffect(() => { setValue(node.content); }, [node.content]);
+  useEffect(() => { if (editing) ref.current?.focus(); }, [editing]);
 
   const meta = node.triggerType ? triggerMeta[node.triggerType] : null;
   const isTrigger = node.type === 'trigger' && meta;
-  const accent = node.style?.color || (meta ? meta.color : '#6f6249');
-  const fontSize = node.style?.fontSize ?? 13;
-  const tilt = tiltOf(id);
+  const fontSize = node.style?.fontSize ?? 15;
 
   function commit() {
     setEditing(false);
     if (value !== node.content) updateNode(id, { content: value });
   }
 
+  function openLongForm(event: React.MouseEvent) {
+    event.stopPropagation();
+    if (value !== node.content) updateNode(id, { content: value });
+    setEditing(false);
+    if (projectId) navigate(`/canvas/${projectId}/node/${id}/edit`);
+  }
+
   return (
     <div
-      className="relative"
+      className={`context-note ${selected ? 'context-note-selected' : ''}`}
       style={{
-        width: 184,
-        transform: `rotate(${tilt}deg)`,
+        width: '100%',
+        height: '100%',
         outline: inCluster ? `2px dashed ${inCluster}` : undefined,
-        outlineOffset: 7,
+        outlineOffset: 6,
       }}
     >
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="!h-2.5 !w-2.5 !border !border-solid"
-        style={{
-          background: '#f4eee1',
-          borderColor: 'rgba(79,69,52,0.65)',
-          boxShadow: '0 1px 2px rgba(51,45,34,0.25)',
-        }}
+      <NodeResizer
+        isVisible={selected}
+        minWidth={220}
+        minHeight={160}
+        keepAspectRatio
+        lineStyle={{ borderColor: 'transparent' }}
+        handleStyle={{ width: 10, height: 10, border: '1px solid #999', borderRadius: 3, background: '#fff' }}
       />
-
-      {isTrigger ? (
-        /* ===== 触发卡：做旧纸条 + 档案编号 + 侧边色标 ===== */
-        <div
-          className="paper relative"
-          style={{
-            borderLeft: `4px solid ${accent}`,
-            boxShadow: selected
-              ? `0 0 0 1.5px ${accent}, 0 3px 8px rgba(51,45,34,0.2), 0 12px 24px rgba(51,45,34,0.16)`
-              : undefined,
+      <Handle type="target" position={Position.Left} style={{ opacity: 0, pointerEvents: 'none' }} />
+      <div className="context-note-header">
+        <span className="context-note-icon">
+          {isTrigger ? <TriggerIcon type={node.triggerType!} size={16} /> : '📝'}
+        </span>
+        <span className="context-note-title">{isTrigger ? meta.name : 'Idea Node'}</span>
+        {node.material && (
+          <button
+            type="button"
+            className="context-expand nodrag"
+            onClick={(event) => {
+              event.stopPropagation();
+              data.onExpandMaterial?.(id);
+            }}
+            title="展开全部资料"
+          >
+            ⛶
+          </button>
+        )}
+        <button
+          type="button"
+          className="context-trigger nodrag"
+          onClick={(event) => {
+            event.stopPropagation();
+            data.onOpenPanel?.(id, 'trigger');
           }}
         >
-          {/* 顶部档案条 */}
-          <div className="flex items-center justify-between border-b border-[rgba(79,69,52,0.25)] px-2.5 py-1">
-            <span className="flex items-center gap-1.5">
-              <span
-                className="flex h-[17px] w-[17px] items-center justify-center rounded-sm text-[10px] leading-none text-paper-light"
-                style={{ background: accent }}
-              >
-                {meta.mark}
-              </span>
-              <span
-                className="text-[11px] tracking-[0.14em]"
-                style={{ color: accent }}
-              >
-                {meta.name}
-              </span>
-            </span>
-            <span className="meta-line text-[9px]">{meta.code}</span>
+          Trigger ✧
+        </button>
+      </div>
+
+      <div className="context-note-body">
+        {editing ? (
+          <textarea
+            ref={ref}
+            className="context-note-textarea nodrag"
+            style={{ fontSize, lineHeight: 1.55 }}
+            rows={Math.min(6, Math.max(3, value.split('\n').length))}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onBlur={commit}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) commit();
+              if (e.key === 'Escape') { setValue(node.content); setEditing(false); }
+            }}
+            placeholder="Write down your thoughts here..."
+          />
+        ) : (
+          <div
+            className="min-h-[58px] cursor-text whitespace-pre-wrap break-words text-[#666]"
+            style={{ fontSize, lineHeight: 1.55 }}
+            onDoubleClick={openLongForm}
+          >
+            {node.content || <span className="text-gray-400">Write down your thoughts here...</span>}
+            {node.longForm && <div className="mt-3 line-clamp-2 border-t border-black/5 pt-2 text-[11px] font-normal leading-relaxed text-gray-500">{node.longForm}</div>}
           </div>
-          <div className="px-2.5 py-2">
-            {editing ? (
-              <textarea
-                ref={ref}
-                className="rf-node-textarea nodrag"
-                style={{ fontSize, lineHeight: 1.6 }}
-                rows={Math.max(2, value.split('\n').length)}
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                onBlur={commit}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) commit();
-                  if (e.key === 'Escape') {
-                    setValue(node.content);
-                    setEditing(false);
-                  }
-                }}
-                placeholder="写下你的回答…"
-              />
-            ) : (
-              <div
-                className="min-h-[24px] cursor-text whitespace-pre-wrap break-words text-ink"
-                style={{ fontSize, lineHeight: 1.65 }}
-                onDoubleClick={() => setEditing(true)}
-              >
-                {node.content || (
-                  <span className="text-ink-pale">双击编辑…</span>
-                )}
-              </div>
-            )}
-            <NodeTags node={node} />
-          </div>
-        </div>
-      ) : (
-        /* ===== 普通想法：黄色便签 ===== */
-        <div
-          className="sticky-note px-3.5 py-3"
-          style={{
-            backgroundImage: tintOf(id),
-            boxShadow: selected
-              ? '0 0 0 2px rgba(168,68,58,0.42), 0 5px 12px rgba(45,36,20,0.24), 0 16px 30px rgba(45,36,20,0.2)'
-              : undefined,
+        )}
+        <NodeTags node={node} />
+      </div>
+
+      <div className="context-note-actions">
+        <button
+          type="button"
+          className="context-action nodrag"
+          onClick={(event) => {
+            event.stopPropagation();
+            data.onOpenPanel?.(id, 'memory');
           }}
         >
-          {editing ? (
-            <textarea
-              ref={ref}
-              className="rf-node-textarea nodrag"
-              style={{ fontSize, lineHeight: 1.6 }}
-              rows={Math.max(2, value.split('\n').length)}
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              onBlur={commit}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) commit();
-                if (e.key === 'Escape') {
-                  setValue(node.content);
-                  setEditing(false);
-                }
-              }}
-              placeholder="写下你的想法…"
-            />
-          ) : (
-            <div
-              className="min-h-[86px] cursor-text whitespace-pre-wrap break-words pr-3 text-ink"
-              style={{ fontSize, lineHeight: 1.65 }}
-              onDoubleClick={() => setEditing(true)}
-            >
-              {node.content || (
-                <span className="text-[rgba(111,98,73,0.55)]">双击编辑…</span>
-              )}
-            </div>
-          )}
-          <NodeTags node={node} />
-        </div>
-      )}
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!h-2.5 !w-2.5 !border !border-solid"
-        style={{
-          background: '#f4eee1',
-          borderColor: 'rgba(79,69,52,0.65)',
-          boxShadow: '0 1px 2px rgba(51,45,34,0.25)',
-        }}
-      />
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10.01 10.01 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8.01 8.01 0 0 1-8 8Zm1-13h-2v6l5.2 3.1 1-1.7-4.2-2.5Z" /></svg>
+          记忆
+        </button>
+        <button
+          type="button"
+          className="context-action nodrag"
+          onClick={(event) => {
+            event.stopPropagation();
+            data.onOpenPanel?.(id, 'reference');
+          }}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h14V5Zm2 5h2v7H7Zm4-3h2v10h-2Zm4 6h2v4h-2Z" /></svg>
+          参考
+        </button>
+        <button type="button" className="context-action nodrag" onClick={openLongForm}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75Zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75Z" /></svg>
+          写作
+        </button>
+      </div>
+      <Handle type="source" position={Position.Right} style={{ opacity: 0, pointerEvents: 'none' }} />
     </div>
   );
 }
 
-/** 标签：可行性 / 分类 / 孵化状态 */
 function NodeTags({ node }: { node: CanvasNode }) {
-  const hasAny =
-    node.tags?.feasibility || node.tags?.category || node.incubationUntil != null;
+  const hasAny = node.tags?.feasibility || node.tags?.category || node.incubationUntil != null;
   if (!hasAny) return null;
-
   return (
-    <div className="mt-2 flex flex-wrap gap-1">
+    <div className="mt-3 flex flex-wrap gap-1.5">
       {node.tags?.feasibility && (
-        <span
-          className="inline-block rounded-sm border px-1.5 py-[1px] text-[10px] tracking-wider"
-          style={{
-            borderColor:
-              node.tags.feasibility === 'high'
-                ? 'rgba(95,107,64,0.6)'
-                : node.tags.feasibility === 'medium'
-                  ? 'rgba(143,106,51,0.6)'
-                  : 'rgba(168,68,58,0.55)',
-            color:
-              node.tags.feasibility === 'high'
-                ? '#4d5834'
-                : node.tags.feasibility === 'medium'
-                  ? '#7d5c2b'
-                  : '#a8443a',
-            background: 'rgba(255,253,246,0.5)',
-          }}
-        >
-          可行性
-          {node.tags.feasibility === 'high'
-            ? '高'
-            : node.tags.feasibility === 'medium'
-              ? '中'
-              : '低'}
+        <span className="inline-block rounded-md border-[1.5px] border-[var(--ink)] bg-[var(--bg-white)] px-2 py-0.5 text-[10px] font-bold shadow-[1px_1px_0_var(--ink)]">
+          {node.tags.feasibility === 'high' ? 'High' : node.tags.feasibility === 'medium' ? 'Med' : 'Low'}
         </span>
       )}
       {node.tags?.category && (
-        <span className="inline-block rounded-sm border border-[rgba(79,69,52,0.4)] bg-[rgba(255,253,246,0.5)] px-1.5 py-[1px] text-[10px] tracking-wider text-ink-soft">
+        <span className="inline-block rounded-md border-[1.5px] border-[var(--ink)] bg-[var(--m-grey)] px-2 py-0.5 text-[10px] font-bold shadow-[1px_1px_0_var(--ink)]">
           {node.tags.category}
         </span>
       )}
       {node.incubationUntil != null && (
-        <span className="inline-block rounded-sm border border-dashed border-[rgba(111,98,73,0.7)] bg-[rgba(255,253,246,0.45)] px-1.5 py-[1px] text-[10px] tracking-wider text-ink-soft">
-          孵化中
+        <span className="inline-block rounded-md border-[1.5px] border-[var(--ink)] bg-[var(--neon-cyan)] px-2 py-0.5 text-[10px] font-bold shadow-[1px_1px_0_var(--ink)]">
+          Incubating
         </span>
       )}
     </div>
